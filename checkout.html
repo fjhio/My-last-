@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Solo mart</title>
+    <style>
+        :root { --bg: #ffffff; --text: #000000; --gray: #f9f9f9; --border: #e0e0e0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 40px 5%; }
+        header { margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+        a { text-decoration: none; color: inherit; font-weight: bold; }
+        .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; max-width: 1000px; margin: 0 auto; }
+        @media (max-width: 768px) { .layout { grid-template-columns: 1fr; } }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); outline: none; }
+        input:focus, textarea:focus { border-color: var(--text); }
+        .summary-box { background: var(--gray); padding: 30px; border: 1px solid var(--border); }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.9rem; }
+        .total { font-size: 1.2rem; font-weight: bold; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px; }
+        .wa-btn { display: block; width: 100%; padding: 15px; background: #25D366; color: white; border: none; text-align: center; font-weight: bold; font-size: 1rem; cursor: pointer; text-transform: uppercase; margin-top: 20px; transition: opacity 0.3s; }
+        .wa-btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="cart.html">← Back to Cart</a>
+    </header>
+
+    <div class="layout">
+        <div>
+            <h2>Delivery Details</h2><br>
+            <form id="checkoutForm">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="cName" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="cPhone" required>
+                </div>
+                <div class="form-group">
+                    <label>Shipping Address</label>
+                    <textarea id="cAddress" rows="4" required></textarea>
+                </div>
+            </form>
+        </div>
+        
+        <div class="summary-box">
+            <h2>Order Summary</h2><br>
+            <div id="orderItems"></div>
+            <div class="summary-item total">
+                <span>Total</span>
+                <span id="finalTotal">$0.00</span>
+            </div>
+            <button class="wa-btn" onclick="submitOrder()">Place Order via WhatsApp</button>
+        </div>
+    </div>
+
+    <script>
+        if(!localStorage.getItem('solo_auth')) window.location.href = 'login.html';
+        
+        let cart = JSON.parse(localStorage.getItem('solo_cart')) || [];
+        if(cart.length === 0) window.location.href = 'index.html';
+
+        const orderDiv = document.getElementById('orderItems');
+        let total = 0;
+
+        cart.forEach(item => {
+            total += item.price * item.qty;
+            orderDiv.innerHTML += `
+                <div class="summary-item">
+                    <span>${item.qty}x ${item.name}</span>
+                    <span>$${item.price * item.qty}</span>
+                </div>
+            `;
+        });
+        document.getElementById('finalTotal').innerText = `$${total.toFixed(2)}`;
+
+        function submitOrder() {
+            const name = document.getElementById('cName').value;
+            const phone = document.getElementById('cPhone').value;
+            const address = document.getElementById('cAddress').value;
+
+            if(!name || !phone || !address) {
+                alert('Please fill out all delivery details.');
+                return;
+            }
+
+            let message = `*New Order - Solo mart*%0A%0A*Customer:* ${name}%0A*Phone:* ${phone}%0A*Address:* ${address}%0A%0A*Items:*%0A`;
+            cart.forEach(item => {
+                message += `- ${item.qty}x ${item.name} ($${item.price * item.qty})%0A`;
+            });
+            message += `%0A*Total: $${total.toFixed(2)}*`;
+
+            const adminWhatsApp = '1234567890'; // Replace with actual business WhatsApp number
+            window.open(`https://wa.me/${adminWhatsApp}?text=${message}`, '_blank');
+            
+            // Clear cart post-checkout
+            localStorage.removeItem('solo_cart');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
