@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop | Solo mart</title>
+    <style>
+        :root { --bg: #ffffff; --text: #000000; --gray: #f9f9f9; --border: #e0e0e0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); }
+        a { text-decoration: none; color: inherit; }
+        header { position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(5px); border-bottom: 1px solid var(--border); padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+        .logo { font-size: 1.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links span { cursor: pointer; font-size: 0.9rem; }
+        .hero { padding: 80px 5%; text-align: center; background: var(--gray); }
+        .hero h2 { font-size: 3rem; text-transform: uppercase; margin-bottom: 10px; }
+        .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 40px; padding: 60px 5%; }
+        .card { transition: transform 0.3s; }
+        .card:hover { transform: translateY(-5px); }
+        .card img { width: 100%; height: 350px; object-fit: cover; background: var(--gray); }
+        .card-info { padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
+        .controls { display: flex; gap: 10px; margin-top: 10px; }
+        .qty-input { width: 60px; padding: 8px; border: 1px solid var(--border); text-align: center; }
+        .add-btn { flex: 1; background: var(--text); color: var(--bg); border: none; padding: 10px; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; transition: opacity 0.3s; }
+        .add-btn:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Solo mart</div>
+        <div class="nav-links">
+            <span id="authBtn">Login</span>
+            <a href="cart.html">Cart (<span id="cartCount">0</span>)</a>
+        </div>
+    </header>
+
+    <div class="hero">
+        <h2>Essentials</h2>
+        <p>Premium basics for the modern wardrobe.</p>
+    </div>
+
+    <div class="products" id="productGrid"></div>
+
+    <script>
+        const products = [
+            { id: 1, name: "Heavyweight Boxy Tee", price: 45, img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&q=80" },
+            { id: 2, name: "Classic Supima Tee", price: 35, img: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500&q=80" },
+            { id: 3, name: "Oversized Drop Shoulder", price: 50, img: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=500&q=80" },
+            { id: 4, name: "Minimalist Ribbed Tee", price: 40, img: "https://images.unsplash.com/photo-1562157873-818bc0726f68?w=500&q=80" }
+        ];
+
+        let cart = JSON.parse(localStorage.getItem('solo_cart')) || [];
+        const isAuth = localStorage.getItem('solo_auth');
+        
+        const authBtn = document.getElementById('authBtn');
+        authBtn.textContent = isAuth ? "Logout" : "Login";
+        authBtn.onclick = () => {
+            if(isAuth) { localStorage.removeItem('solo_auth'); window.location.reload(); }
+            else window.location.href = 'login.html';
+        };
+
+        function updateCartUI() {
+            document.getElementById('cartCount').innerText = cart.reduce((acc, item) => acc + item.qty, 0);
+            localStorage.setItem('solo_cart', JSON.stringify(cart));
+        }
+
+        function addToCart(id) {
+            const qty = parseInt(document.getElementById(`qty-${id}`).value);
+            const product = products.find(p => p.id === id);
+            const existing = cart.find(item => item.id === id);
+            
+            if(existing) existing.qty += qty;
+            else cart.push({ ...product, qty });
+            
+            updateCartUI();
+        }
+
+        const grid = document.getElementById('productGrid');
+        products.forEach(p => {
+            grid.innerHTML += `
+                <div class="card">
+                    <img src="${p.img}" alt="${p.name}">
+                    <div class="card-info">
+                        <strong>${p.name}</strong>
+                        <span>$${p.price}</span>
+                    </div>
+                    <div class="controls">
+                        <input type="number" id="qty-${p.id}" class="qty-input" value="1" min="1">
+                        <button class="add-btn" onclick="addToCart(${p.id})">Add to Cart</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        updateCartUI();
+    </script>
+</body>
+</html>
