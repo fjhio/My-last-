@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart | Solo mart</title>
+    <style>
+        :root { --bg: #ffffff; --text: #000000; --border: #e0e0e0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 40px 5%; }
+        header { display: flex; justify-content: space-between; margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+        a { text-decoration: none; color: inherit; font-weight: bold; }
+        .cart-container { max-width: 800px; margin: 0 auto; }
+        .cart-item { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; border-bottom: 1px solid var(--border); }
+        .item-details { display: flex; align-items: center; gap: 20px; flex: 2; }
+        .item-details img { width: 80px; height: 80px; object-fit: cover; }
+        .controls { display: flex; align-items: center; gap: 15px; }
+        .qty-input { width: 50px; padding: 5px; text-align: center; border: 1px solid var(--border); }
+        .remove-btn { background: none; border: none; color: #ff4d4d; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; }
+        .summary { margin-top: 40px; text-align: right; }
+        .summary h3 { font-size: 1.5rem; margin-bottom: 20px; }
+        .checkout-btn { padding: 15px 30px; background: var(--text); color: var(--bg); border: none; cursor: pointer; text-transform: uppercase; font-size: 1rem; transition: opacity 0.3s; }
+        .checkout-btn:hover { opacity: 0.8; }
+        .empty-msg { text-align: center; padding: 40px; color: #666; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">Solo mart</a>
+        <a href="index.html">← Continue Shopping</a>
+    </header>
+
+    <div class="cart-container">
+        <h2>Your Cart</h2>
+        <div id="cartItems"></div>
+        <div class="summary" id="summarySection">
+            <h3>Total: $<span id="totalPrice">0.00</span></h3>
+            <button class="checkout-btn" onclick="proceedToCheckout()">Checkout</button>
+        </div>
+    </div>
+
+    <script>
+        if(!localStorage.getItem('solo_auth')) {
+            alert("Please login to view your cart.");
+            window.location.href = 'login.html';
+        }
+
+        let cart = JSON.parse(localStorage.getItem('solo_cart')) || [];
+        const cartDiv = document.getElementById('cartItems');
+        const summary = document.getElementById('summarySection');
+
+        function renderCart() {
+            if(cart.length === 0) {
+                cartDiv.innerHTML = '<p class="empty-msg">Your cart is empty.</p>';
+                summary.style.display = 'none';
+                return;
+            }
+            summary.style.display = 'block';
+            cartDiv.innerHTML = '';
+            let total = 0;
+
+            cart.forEach((item, index) => {
+                total += item.price * item.qty;
+                cartDiv.innerHTML += `
+                    <div class="cart-item">
+                        <div class="item-details">
+                            <img src="${item.img}" alt="${item.name}">
+                            <div>
+                                <strong>${item.name}</strong><br>
+                                <span>$${item.price}</span>
+                            </div>
+                        </div>
+                        <div class="controls">
+                            <input type="number" class="qty-input" value="${item.qty}" min="1" onchange="updateQty(${index}, this.value)">
+                            <strong>$${item.price * item.qty}</strong>
+                            <button class="remove-btn" onclick="removeItem(${index})">Remove</button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('totalPrice').innerText = total.toFixed(2);
+            localStorage.setItem('solo_cart', JSON.stringify(cart));
+        }
+
+        function updateQty(index, val) {
+            if(val < 1) val = 1;
+            cart[index].qty = parseInt(val);
+            renderCart();
+        }
+
+        function removeItem(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        function proceedToCheckout() {
+            window.location.href = 'checkout.html';
+        }
+
+        renderCart();
+    </script>
+</body>
+</html>
